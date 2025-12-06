@@ -1,6 +1,10 @@
 # SheetSense
 
-A full-stack Next.js 14 application for analyzing Google Sheet data with AI-powered insights.
+A full-stack Next.js 16 application for analyzing Google Sheet data with AI-powered insights.
+
+
+https://github.com/user-attachments/assets/3f49a40b-caf4-423f-a121-27478ea47742
+
 
 ## Features
 
@@ -14,7 +18,7 @@ A full-stack Next.js 14 application for analyzing Google Sheet data with AI-powe
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: TailwindCSS
 - **UI Components**: Shadcn/UI
