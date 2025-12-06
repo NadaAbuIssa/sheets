@@ -21,17 +21,5 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
-  try {
-    await connectDB();
-    await Analysis.deleteMany({});
-    return NextResponse.json({ message: 'All analyses deleted successfully' });
-  } catch (error: any) {
-    console.error('Error deleting analyses:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to delete analyses' },
-      { status: 500 }
-    );
-  }
-}
+
 
