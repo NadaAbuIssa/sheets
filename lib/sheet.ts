@@ -14,13 +14,13 @@ export function excelSerialToDate(serial: number): string {
   const days = serial - 1; // Excel counts from 1, not 0
   const milliseconds = days * 24 * 60 * 60 * 1000;
   const date = new Date(EXCEL_EPOCH.getTime() + milliseconds);
-  
+
   // Adjust for Excel's leap year bug (1900 was not a leap year)
   if (serial >= 60) {
     const adjustedDate = new Date(date.getTime() - 24 * 60 * 60 * 1000);
     return adjustedDate.toISOString();
   }
-  
+
   return date.toISOString();
 }
 
@@ -116,7 +116,7 @@ export interface SheetAnalysis {
  */
 export function detectColumnType(values: any[]): 'numeric' | 'text' | 'timestamp' | 'categorical' {
   const nonEmptyValues = values.filter(v => v !== null && v !== undefined && v !== '');
-  
+
   if (nonEmptyValues.length === 0) {
     return 'text';
   }
@@ -182,18 +182,18 @@ export function detectColumnType(values: any[]): 'numeric' | 'text' | 'timestamp
  */
 function cleanValue(value: any, columnType: string): any {
   if (value === null || value === undefined) return '';
-  
+
   // Handle Excel serial dates
   if (columnType === 'timestamp' && typeof value === 'number' && isExcelSerialDate(value)) {
     return excelSerialToDate(value);
   }
-  
+
   if (typeof value === 'string') {
     const trimmed = value.trim();
     // Normalize whitespace
     return trimmed.replace(/\s+/g, ' ');
   }
-  
+
   return value;
 }
 
@@ -203,7 +203,7 @@ function cleanValue(value: any, columnType: string): any {
 function removeDuplicates(rows: Record<string, any>[]): Record<string, any>[] {
   const seen = new Set<string>();
   const unique: Record<string, any>[] = [];
-  
+
   for (const row of rows) {
     const key = JSON.stringify(Object.values(row).map(v => String(v).toLowerCase().trim()));
     if (!seen.has(key)) {
@@ -211,7 +211,7 @@ function removeDuplicates(rows: Record<string, any>[]): Record<string, any>[] {
       unique.push(row);
     }
   }
-  
+
   return unique;
 }
 
@@ -242,14 +242,14 @@ export function calculateNumericStats(values: (string | number)[], columnName: s
   const median = numericValues.length % 2 === 0
     ? (numericValues[numericValues.length / 2 - 1] + numericValues[numericValues.length / 2]) / 2
     : numericValues[Math.floor(numericValues.length / 2)];
-  
+
   // Calculate mode
   const frequency: Record<number, number> = {};
   numericValues.forEach(v => {
     frequency[v] = (frequency[v] || 0) + 1;
   });
-  const modeEntry = Object.entries(frequency).reduce((a, b) => 
-    frequency[Number(a[0])] > frequency[Number(b[0])] ? a : b, 
+  const modeEntry = Object.entries(frequency).reduce((a, b) =>
+    frequency[Number(a[0])] > frequency[Number(b[0])] ? a : b,
     ['0', 0]
   );
   const mode = frequency[Number(modeEntry[0])] > 1 ? Number(modeEntry[0]) : null;
@@ -262,7 +262,7 @@ export function calculateNumericStats(values: (string | number)[], columnName: s
   const max = numericValues[numericValues.length - 1];
   const binSize = (max - min) / 10;
   const bins: { bin: string; count: number }[] = [];
-  
+
   for (let i = 0; i < 10; i++) {
     const binStart = min + i * binSize;
     const binEnd = binStart + binSize;
@@ -291,17 +291,17 @@ export function calculateNumericStats(values: (string | number)[], columnName: s
 export function calculateCategoricalStats(values: any[]): CategoricalStats {
   const counts: Record<string, number> = {};
   const total = values.length;
-  
+
   values.forEach(v => {
     const key = String(v).toLowerCase().trim();
     counts[key] = (counts[key] || 0) + 1;
   });
-  
+
   const percentages: Record<string, number> = {};
   Object.keys(counts).forEach(key => {
     percentages[key] = (counts[key] / total) * 100;
   });
-  
+
   const topCategories = Object.entries(counts)
     .map(([value, count]) => ({
       value,
@@ -310,7 +310,7 @@ export function calculateCategoricalStats(values: any[]): CategoricalStats {
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
-  
+
   return {
     valueCounts: counts,
     percentages,
@@ -323,7 +323,7 @@ export function calculateCategoricalStats(values: any[]): CategoricalStats {
  */
 export function analyzeSentiment(text: string): 'Positive' | 'Neutral' | 'Negative' {
   const positiveWords = [
-    'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'happy', 
+    'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'happy',
     'pleased', 'satisfied', 'positive', 'best', 'perfect', 'awesome', 'brilliant', 'outstanding',
     'superb', 'marvelous', 'delighted', 'joyful', 'success', 'win', 'achievement'
   ];
@@ -332,21 +332,21 @@ export function analyzeSentiment(text: string): 'Positive' | 'Neutral' | 'Negati
     'worst', 'poor', 'negative', 'sad', 'unhappy', 'disgusting', 'fail', 'failure',
     'error', 'problem', 'issue', 'broken', 'wrong', 'disaster'
   ];
-  
+
   const lowerText = text.toLowerCase();
   let positiveCount = 0;
   let negativeCount = 0;
-  
+
   positiveWords.forEach(word => {
     const regex = new RegExp(`\\b${word}\\b`, 'gi');
     positiveCount += (lowerText.match(regex) || []).length;
   });
-  
+
   negativeWords.forEach(word => {
     const regex = new RegExp(`\\b${word}\\b`, 'gi');
     negativeCount += (lowerText.match(regex) || []).length;
   });
-  
+
   if (positiveCount > negativeCount) return 'Positive';
   if (negativeCount > positiveCount) return 'Negative';
   return 'Neutral';
@@ -363,13 +363,13 @@ function extractKeywords(text: string, minLength: number = 3): string[] {
     'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must',
     'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they'
   ]);
-  
+
   const words = text
     .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
     .filter(word => word.length >= minLength && !stopWords.has(word));
-  
+
   return words;
 }
 
@@ -378,7 +378,7 @@ function extractKeywords(text: string, minLength: number = 3): string[] {
  */
 export function calculateTextStats(values: any[], columnName: string): TextStats {
   const textValues = values.map(v => String(v).trim()).filter(v => v.length > 0);
-  
+
   // Sentiment analysis
   const sentiments = textValues.map(v => analyzeSentiment(v));
   const sentimentCounts = {
@@ -386,35 +386,35 @@ export function calculateTextStats(values: any[], columnName: string): TextStats
     neutral: sentiments.filter(s => s === 'Neutral').length,
     negative: sentiments.filter(s => s === 'Negative').length,
   };
-  
+
   // Extract keywords and count frequency
   const allWords: string[] = [];
   textValues.forEach(text => {
     allWords.push(...extractKeywords(text));
   });
-  
+
   const wordFrequency: Record<string, number> = {};
   allWords.forEach(word => {
     wordFrequency[word] = (wordFrequency[word] || 0) + 1;
   });
-  
+
   // Top keywords
   const topKeywords = Object.entries(wordFrequency)
     .map(([word, count]) => ({ word, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 20);
-  
+
   // Sample highlights (diverse samples)
   const sampleHighlights = Array.from(new Set(textValues))
     .slice(0, 5)
     .map(v => v.length > 100 ? v.substring(0, 100) + '...' : v);
-  
+
   // Word cloud data (top 50 words)
   const wordCloudData = topKeywords.slice(0, 50).map(({ word, count }) => ({
     text: word,
     value: count,
   }));
-  
+
   return {
     sentiment: sentimentCounts,
     topKeywords: topKeywords.slice(0, 10),
@@ -429,10 +429,10 @@ export function calculateTextStats(values: any[], columnName: string): TextStats
  */
 export function calculateTimestampStats(values: any[]): TimestampStats {
   const dates: Date[] = [];
-  
+
   values.forEach(v => {
     let date: Date | null = null;
-    
+
     if (typeof v === 'number' && isExcelSerialDate(v)) {
       date = new Date(excelSerialToDate(v));
     } else if (typeof v === 'string') {
@@ -440,12 +440,12 @@ export function calculateTimestampStats(values: any[]): TimestampStats {
     } else if (v instanceof Date) {
       date = v;
     }
-    
+
     if (date && !isNaN(date.getTime())) {
       dates.push(date);
     }
   });
-  
+
   if (dates.length === 0) {
     return {
       earliest: '',
@@ -455,18 +455,18 @@ export function calculateTimestampStats(values: any[]): TimestampStats {
       trendLineData: [],
     };
   }
-  
+
   dates.sort((a, b) => a.getTime() - b.getTime());
   const earliest = dates[0].toISOString();
   const latest = dates[dates.length - 1].toISOString();
-  
+
   // Daily frequency
   const dailyFrequency: Record<string, number> = {};
   dates.forEach(date => {
     const key = date.toISOString().split('T')[0];
     dailyFrequency[key] = (dailyFrequency[key] || 0) + 1;
   });
-  
+
   // Weekly frequency (by week start)
   const weeklyFrequency: Record<string, number> = {};
   dates.forEach(date => {
@@ -475,12 +475,12 @@ export function calculateTimestampStats(values: any[]): TimestampStats {
     const key = weekStart.toISOString().split('T')[0];
     weeklyFrequency[key] = (weeklyFrequency[key] || 0) + 1;
   });
-  
+
   // Trend line data (aggregated by day)
   const trendLineData = Object.entries(dailyFrequency)
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
-  
+
   return {
     earliest,
     latest,
@@ -517,7 +517,7 @@ export function processCSV(csvContent: string): ParsedSheet {
   const columnNames = rawColumnNames.map(name => name.trim().replace(/\s+/g, ' '));
 
   // Process and clean data
-  const cleanedRecords = records.map(row => {
+  const cleanedRecords = records.map((row: any) => {
     const cleaned: Record<string, any> = {};
     rawColumnNames.forEach((rawName, idx) => {
       cleaned[columnNames[idx]] = cleanValue(row[rawName], 'text');
@@ -532,10 +532,10 @@ export function processCSV(csvContent: string): ParsedSheet {
   const columns: ProcessedColumn[] = columnNames.map(name => {
     const values = uniqueRecords.map((row: any) => row[name] || '');
     const type = detectColumnType(values);
-    
+
     // Clean values based on type
     const cleanedValues = values.map(v => cleanValue(v, type));
-    
+
     return { name, type, values: cleanedValues };
   });
 
@@ -572,16 +572,16 @@ export function processCSV(csvContent: string): ParsedSheet {
  * Process XLSX with enhanced parsing and Excel date conversion
  */
 export function processXLSX(buffer: ArrayBuffer): ParsedSheet {
-  const workbook = XLSX.read(buffer, { 
+  const workbook = XLSX.read(buffer, {
     type: 'array',
     cellDates: false, // We'll handle dates manually
     cellNF: false,
   });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
-  
+
   // Get raw data with cell info
-  const rawData: any[][] = XLSX.utils.sheet_to_json(worksheet, { 
+  const rawData: any[][] = XLSX.utils.sheet_to_json(worksheet, {
     header: 1,
     defval: '',
     raw: false,
@@ -609,12 +609,12 @@ export function processXLSX(buffer: ArrayBuffer): ParsedSheet {
     const record: Record<string, any> = {};
     headerRow.forEach((header, idx) => {
       let value = row[idx] || '';
-      
+
       // Check if cell is an Excel date serial number
       if (typeof value === 'number') {
         const cellRef = XLSX.utils.encode_cell({ r: dataRows.indexOf(row) + 1, c: idx });
         const cell = worksheet[cellRef];
-        
+
         // Check if Excel formatted this as a date
         if (cell && cell.z && (cell.z.includes('m') || cell.z.includes('d') || cell.z.includes('y'))) {
           // Excel date format detected
@@ -626,7 +626,7 @@ export function processXLSX(buffer: ArrayBuffer): ParsedSheet {
           value = excelSerialToDate(value);
         }
       }
-      
+
       record[header] = value;
     });
     if (Object.keys(record).length > 0) {
@@ -708,7 +708,7 @@ export function generateAnalysis(sheetData: ParsedSheet): SheetAnalysis {
   // Process each column based on type
   sheetData.columns.forEach(col => {
     const columnData = sheetData.rows.map(row => row[col.name]);
-    
+
     switch (col.type) {
       case 'numeric':
         analysis.numericStats[col.name] = calculateNumericStats(columnData, col.name);
@@ -756,7 +756,7 @@ export function generateColumnSummary(column: ProcessedColumn): string {
 
 export function getColumnStats(column: ProcessedColumn) {
   const nonEmptyValues = column.values.filter(v => v !== null && v !== undefined && v !== '');
-  
+
   switch (column.type) {
     case 'numeric':
       return calculateNumericStats(nonEmptyValues as (string | number)[], column.name);
