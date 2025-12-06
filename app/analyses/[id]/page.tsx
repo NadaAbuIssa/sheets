@@ -2,14 +2,19 @@ import Sidebar from '@/components/Sidebar';
 import EnhancedDashboard from '@/components/EnhancedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 
+import connectDB from '@/lib/db';
+import Analysis from '@/models/Analysis';
+
 async function getAnalysis(id: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/analyses/${id}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
+    await connectDB();
+    const analysis = await Analysis.findById(id).lean();
+    if (!analysis) return null;
+
+    // Convert _id and dates to strings to avoid serialization issues
+    return JSON.parse(JSON.stringify(analysis));
+  } catch (error) {
+    console.error('Error fetching analysis:', error);
     return null;
   }
 }

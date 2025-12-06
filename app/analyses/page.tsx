@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Eye } from 'lucide-react';
 
+import connectDB from '@/lib/db';
+import Analysis from '@/models/Analysis';
+
 async function getAnalyses() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/analyses`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
+    await connectDB();
+    const analyses = await Analysis.find().sort({ createdAt: -1 }).lean();
+    return JSON.parse(JSON.stringify(analyses));
+  } catch (error) {
+    console.error('Error fetching analyses:', error);
     return [];
   }
 }

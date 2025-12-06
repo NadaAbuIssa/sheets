@@ -7,19 +7,21 @@ import { Key, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+import connectDB from '@/lib/db';
+import Analysis from '@/models/Analysis';
+
 async function getDashboardData() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/analyses`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return { analyses: [], latest: null };
-    const analyses = await res.json();
-    const latest = analyses.length > 0 ? await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/analyses/${analyses[0]._id}`,
-      { cache: 'no-store' }
-    ).then(r => r.ok ? r.json() : null) : null;
-    return { analyses, latest };
-  } catch {
+    await connectDB();
+    const analyses = await Analysis.find().sort({ createdAt: -1 }).lean();
+
+    // Serialize for Client Components
+    const serializedAnalyses = JSON.parse(JSON.stringify(analyses));
+    const latest = serializedAnalyses.length > 0 ? serializedAnalyses[0] : null;
+
+    return { analyses: serializedAnalyses, latest };
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
     return { analyses: [], latest: null };
   }
 }

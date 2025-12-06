@@ -3,14 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart3, TrendingUp, FileText } from 'lucide-react';
 
+import connectDB from '@/lib/db';
+import Analysis from '@/models/Analysis';
+
 async function getReportsData() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/analyses`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
+    await connectDB();
+    const analyses = await Analysis.find().sort({ createdAt: -1 }).lean();
+    return JSON.parse(JSON.stringify(analyses));
+  } catch (error) {
+    console.error('Error fetching reports data:', error);
     return [];
   }
 }
