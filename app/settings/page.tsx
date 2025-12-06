@@ -82,6 +82,41 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-white/10 backdrop-blur-lg border-white/20 shadow-xl rounded-2xl border-red-500/20">
+            <CardHeader>
+              <CardTitle className="text-red-500">Danger Zone</CardTitle>
+              <CardDescription>Manage your data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-red-500">Clear All Data</Label>
+                  <p className="text-sm text-muted-foreground">Permanently delete all analyses</p>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    if (confirm('Are you sure you want to delete all data? This cannot be undone.')) {
+                      try {
+                        const res = await fetch('/api/analyses', { method: 'DELETE' });
+                        if (res.ok) {
+                          alert('All data deleted successfully');
+                          window.location.reload();
+                        } else {
+                          alert('Failed to delete data');
+                        }
+                      } catch (e) {
+                        alert('Error deleting data');
+                      }
+                    }
+                  }}
+                >
+                  Clear Data
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
